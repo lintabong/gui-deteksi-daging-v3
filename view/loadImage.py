@@ -130,6 +130,15 @@ class LoadImageFrame(tkinter.Frame):
 
             print(self.method.get())
 
+            vals = img.mean(axis=2).flatten()
+
+            fig = Figure(figsize=(4.4, 2.5), dpi=100)
+            fig.add_subplot(111).hist(vals, 255)
+            
+            canvas = FigureCanvasTkAgg(fig,  master=self.hisFrame)  
+            canvas.draw()
+            canvas.get_tk_widget().place(x=10, y=10)
+
     def methodFrame(self):
         methodframe = tkinter.LabelFrame(self, width=330, height=270, background=self.bg, text="  Metode  ")
         methodframe.place(x=10, y=10)
@@ -165,8 +174,11 @@ class LoadImageFrame(tkinter.Frame):
         f0 = tkinter.LabelFrame(self, width=584, height=380, background=self.bg, text="  Histogram  ")
         f0.place(x=635, y=340)
 
-        # f1 = tkinter.Frame(f0, width=600, height=178, background="#a8a7a7")
-        # f1.place(x=5, y=5)
+        f1 = tkinter.Frame(f0, width=567, height=342, background="#a8a7a7")
+        f1.place(x=5, y=5)
+
+        self.hisFrame = tkinter.Frame(f1, width=567, height=342)
+        self.hisFrame.place(x=0, y=0)
 
     def resultFrame(self):
         f0 = tkinter.LabelFrame(self, width=615, height=157, background=self.bg, text="  Hasil  ")

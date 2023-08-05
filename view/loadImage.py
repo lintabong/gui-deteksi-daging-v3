@@ -14,6 +14,11 @@ from tkinter import filedialog
 
 from lib.config import Config
 from lib.image_processing import GLCM
+from lib import prediction
+
+import numpy as np
+from scipy.special import gamma,psi
+from scipy.spatial.distance import cdist
 
 
 guiConfig = Config()
@@ -92,31 +97,35 @@ class LoadImageFrame(tkinter.Frame):
 
             self.nameField.insert(0, self.pathfile)
 
-            img = Image.open(self.pathfile)
-            img = img.resize((self.sizeImg, self.sizeImg))
-            img = ImageTk.PhotoImage(img)
+            img = cv2.imread(self.pathfile)
+            img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+            gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+            ret,thresh = cv2.threshold(gray,70,255,0)
 
-            self.image1 = tkinter.Label(self, image=img)
-            self.image2 = tkinter.Label(self, image=img)
-            self.image3 = tkinter.Label(self, image=img)
+            pilimg = Image.fromarray(img)
+            pilimg = pilimg.resize((self.sizeImg, self.sizeImg))
+            pilimg = ImageTk.PhotoImage(pilimg)
+
+            pilimg2 = Image.fromarray(gray)
+            pilimg2 = pilimg2.resize((self.sizeImg, self.sizeImg))
+            pilimg2 = ImageTk.PhotoImage(pilimg2)
+
+            pilimg3 = Image.fromarray(thresh)
+            pilimg3 = pilimg3.resize((self.sizeImg, self.sizeImg))
+            pilimg3 = ImageTk.PhotoImage(pilimg3)
+
+            self.image1 = tkinter.Label(self, image=pilimg)
+            self.image2 = tkinter.Label(self, image=pilimg2)
+            self.image3 = tkinter.Label(self, image=pilimg3)
             
-            self.image1.image = img
-            self.image2.image = img
-            self.image3.image = img
+            self.image1.image = pilimg
+            self.image2.image = pilimg2
+            self.image3.image = pilimg3
 
             self.image1.place(x=360, y=10)
             self.image2.place(x=653, y=10)
             self.image3.place(x=945, y=10)
 
-            configuration = guiConfig.read()
-
-            configuration["user"]["pathfile"] = self.pathfile
-
-            guiConfig.write(configuration)
-
-            img = cv2.imread(self.pathfile)
-            
-            gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
                         
             h, w = gray.shape
             ymin, ymax, xmin, xmax = h//3, h*2//3, w//3, w*2//3
@@ -129,6 +138,41 @@ class LoadImageFrame(tkinter.Frame):
             self.textureAnalysisFrame()
 
             print(self.method.get())
+            result = prediction.run(self.pathfile)
+
+            if self.analysisText[1][5] >= 1000:
+                category = "segar"
+            elif self.analysisText[1][5] < 1000 and self.analysisText[1][5] >= 100:
+                category = "dibekukan"
+            else:
+                category = "busuk"
+
+            self.inputPrediction.delete(0, END)
+            self.inputAccuration.delete(0, END)
+            self.inputCategory.delete(0, END)
+
+            self.inputPrediction.insert(0, result[0])
+            self.inputAccuration.insert(0, round(result[1], 3))
+            self.inputCategory.insert(0, category)
+
+            d = round(result[1], 3)
+            r_k = 1
+            n = 1
+            k = 1
+
+            v_unit_ball = np.pi**(0.5*d)/gamma(0.5*d + 1.0)
+            lr_k = np.log(r_k)
+            H = psi(n) - psi(k) + np.log(v_unit_ball) + (np.cfloat(d)/np.cfloat(n))*( lr_k.sum())
+
+            sd = (100 - round(result[1], 3))/5
+
+            self.inputEntropy.delete(0, END)
+            self.inputDeviation.delete(0, END)
+            self.inputQuality.delete(0, END)
+
+            self.inputEntropy.insert(0, H)
+            self.inputDeviation.insert(0, sd)
+            self.inputQuality.insert(0, round(result[1], 3))
 
             vals = img.mean(axis=2).flatten()
 
@@ -200,13 +244,37 @@ class LoadImageFrame(tkinter.Frame):
             bg=self.bg, 
             text="Kategori").place(x=10,y=70)
         
-        self.inputPrediction = tkinter.Entry(f0, width=15)
-        self.inputAccuration = tkinter.Entry(f0, width=15)
-        self.inputCategory   = tkinter.Entry(f0, width=15)
+        tkinter.Label(
+            f0, 
+            bg=self.bg, 
+            text="Entropi").place(x=210,y=10)
+            # font=("Arial", 22))
 
-        self.inputPrediction.place(x=110,y=10)
-        self.inputAccuration.place(x=110,y=40)
-        self.inputCategory.place(x=110,y=70)
+        tkinter.Label(
+            f0, 
+            bg=self.bg, 
+            text="Standar deviasi").place(x=210,y=40)
+        
+        tkinter.Label(
+            f0, 
+            bg=self.bg, 
+            text="Index Kualiti").place(x=210,y=70)
+        
+        self.inputPrediction = tkinter.Entry(f0, width=12)
+        self.inputAccuration = tkinter.Entry(f0, width=12)
+        self.inputCategory   = tkinter.Entry(f0, width=12)
+
+        self.inputEntropy = tkinter.Entry(f0, width=12)
+        self.inputDeviation = tkinter.Entry(f0, width=12)
+        self.inputQuality   = tkinter.Entry(f0, width=12)
+
+        self.inputPrediction.place(x=80,y=10)
+        self.inputAccuration.place(x=80,y=40)
+        self.inputCategory.place(x=80,y=70)
+
+        self.inputEntropy.place(x=320,y=10)
+        self.inputDeviation.place(x=320,y=40)
+        self.inputQuality.place(x=320,y=70)
 
         tkinter.Button(
             f0, 

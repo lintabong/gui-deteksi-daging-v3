@@ -13,6 +13,8 @@ from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from tkinter import filedialog
 
 from lib.config import Config
+from lib.image_processing import GLCM
+
 
 guiConfig = Config()
 
@@ -112,6 +114,22 @@ class LoadImageFrame(tkinter.Frame):
 
             guiConfig.write(configuration)
 
+            img = cv2.imread(self.pathfile)
+            
+            gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+                        
+            h, w = gray.shape
+            ymin, ymax, xmin, xmax = h//3, h*2//3, w//3, w*2//3
+            crop = gray[ymin:ymax, xmin:xmax]
+                        
+            resize = cv2.resize(crop, (0,0), fx=0.5, fy=0.5)
+
+            self.analysisText  = GLCM(resize)
+
+            self.textureAnalysisFrame()
+
+            print(self.method.get())
+
     def methodFrame(self):
         methodframe = tkinter.LabelFrame(self, width=330, height=270, background=self.bg, text="  Metode  ")
         methodframe.place(x=10, y=10)
@@ -182,15 +200,13 @@ class LoadImageFrame(tkinter.Frame):
             f0, 
             text="Save", 
             width=12, 
-            height=2,
-            command=self.loadImage).place(x=470, y=2)
+            height=2).place(x=470, y=2)
         
         tkinter.Button(
             f0, 
             text="History", 
             width=12, 
-            height=2,
-            command=self.loadImage).place(x=470, y=62)
+            height=2).place(x=470, y=62)
 
 
 

@@ -221,29 +221,29 @@ class LoadImageFrame(tkinter.Frame):
             self.analysisText = image_processing.GLCM(img)
             self.textureAnalysisFrame()
 
-            print(self.method.get())
+            print(file.name)
 
-            # get result
-            label, accuracy = image_processing.predict(self.pathfile)
-            category        = image_processing.get_category(self.analysisText[1][5])
-            H               = image_processing.entropy(round(accuracy, 3))
-            sd              = (100 - round(accuracy, 3))/5
+            category = image_processing.get_category(self.analysisText[1][5], 
+                                                     meat=(file.name).split("/")[-2].split(" ")[1])
+            self.inputCategory.delete(0, END)
+            self.inputCategory.insert(0, category)
 
+            print(self.pathfile)
+            label, accuracy = image_processing.predict(file.name)
             self.inputPrediction.delete(0, END)
             self.inputAccuration.delete(0, END)
-            self.inputCategory.delete(0, END)
-            self.inputEntropy.delete(0, END)
-            self.inputDeviation.delete(0, END)
-            self.inputQuality.delete(0, END)
-
             self.inputPrediction.insert(0, label)
             self.inputAccuration.insert(0, round(accuracy, 3))
-            self.inputCategory.insert(0, category)
+
+            H = image_processing.entropy(round(accuracy, 3))
+            sd = (100 - round(accuracy, 3))/5
+            self.inputEntropy.delete(0, END)
+            self.inputDeviation.delete(0, END)
+            self.inputQuality.delete(0, END)            
             self.inputEntropy.insert(0, round(H, 3))
             self.inputDeviation.insert(0, round(sd, 3))
             self.inputQuality.insert(0, round(accuracy, 3))
 
-            # plot histogram
             vals = img.mean(axis=2).flatten()
 
             fig = Figure(figsize=(4.4, 2.5), dpi=100)

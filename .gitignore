@@ -3,7 +3,9 @@
 __pycache__
 
 config.json
+*.db
 
 try0.py
 try1.py
 try2.py
+try3.py

@@ -3,11 +3,12 @@ import cv2
 import pywt
 import numpy
 import random
+import pandas
 from skimage.feature import graycomatrix
 from skimage.feature import graycoprops
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.metrics import accuracy_score
-from scipy.special import gamma,psi
+from scipy.special import gamma, psi
 from scipy.spatial.distance import cdist
 
 
@@ -50,10 +51,17 @@ def entropy(d, r_k=1, n=1, k=1):
 
     return psi(n) - psi(k) + numpy.log(v_unit_ball) + (numpy.cfloat(d)/numpy.cfloat(n))*( lr_k.sum())
 
-def get_category(contrast):
-    if contrast >= 1000:
+def get_category(contrast, meat):
+    xlsx = pandas.read_excel(f'datasets_excel/Dataset Daging {meat}.xlsx', sheet_name="Sheet1")
+    xlsx = xlsx.values.tolist()
+
+    segar = [xlsx[1][5], xlsx[2][5], xlsx[3][5], xlsx[4][5]]
+    dibekukan = [xlsx[9][5], xlsx[10][5], xlsx[11][5], xlsx[12][5]]
+    busuk = [xlsx[17][5], xlsx[18][5], xlsx[19][5], xlsx[20][5]]
+
+    if contrast >= segar[0]:
         category = "segar"
-    elif contrast < 1000 and contrast >= 100:
+    elif contrast < segar[0] and contrast >= dibekukan[0]:
         category = "dibekukan"
     else:
         category = "busuk"
@@ -74,7 +82,7 @@ def getListOfFiles(dirName:str) -> list:
     return allFiles
 
 def extract_wavelet(filepath):
-    img     = cv2.imread(filepath)
+    img = cv2.imread(filepath)
     coeffs2 = pywt.dwt2(img, "haar")
     
     LL, (LH, HL, HH) = coeffs2
